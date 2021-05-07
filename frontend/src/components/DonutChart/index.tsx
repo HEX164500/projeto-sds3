@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useEffect, useState } from 'react';
 import Chart from 'react-apexcharts';
 import { SaleSum } from 'types/sale';
 import { BASE_URL } from 'utils/requests';
@@ -23,11 +24,30 @@ type ChartData = {
 
 function DonutChart() {
 
-  //FORMA ERRADA
-  let chartData: ChartData = { labels: [], series: [] };
+  //FORMA CERTA
+  const [chartData, setChartData] = useState<ChartData>({ labels: [], series: [] });
 
-  //FORMA ERRADA - Um pouco diferente do original
-  axios.get<SaleSum[]>(`${BASE_URL}/sales/amount-by-seller`)
+  //FORMA CORRETA, Não gera mais o loop de requisições
+  useEffect(() => {
+    axios.get<SaleSum[]>(`${BASE_URL}/sales/amount-by-seller`)
+      .then(response => {
+        let newCharData: ChartData = { labels: [], series: [] };
+
+        response.data.map(data => {
+          newCharData.labels.push(data.sellerName);
+          newCharData.series.push(data.sum);
+          return null;
+        });
+
+        setChartData(newCharData);
+      });
+  }, []);
+
+  //FORMA ERRADA
+  //let chartData: ChartData = { labels: [], series: [] };
+
+  //FORMA ERRADA - Gera um loop de requisições a API travando todo o sistema - Um pouco diferente do original 
+  /*axios.get<SaleSum[]>(`${BASE_URL}/sales/amount-by-seller`)
     .then(response => {
       let newCharData : ChartData = { labels: [], series: [] };
 
@@ -37,9 +57,9 @@ function DonutChart() {
         return null;
       });
 
-      chartData = newCharData;
+      setChartData(newCharData);
       console.log(chartData);
-    });
+    });*/
 
   return (
     <Chart
